@@ -5,37 +5,37 @@ import java.util.regex.Pattern;
 
 public class SearchEngine {
     //This list is used to store the name of file which contains the searched query
-    List<String> satisfiedFileNames;
+    private List<String> satisfiedFileNames;
 
     //The list of all files in the directory
-    List<File> allFiles;
+    private List<File> fileList;
 
     private boolean containLargeFile;
 
     public SearchEngine(List<File> files, boolean isContainLargeFile) {
         satisfiedFileNames = new ArrayList<>();
-        allFiles = files;
+        fileList = files;
         containLargeFile = isContainLargeFile;
     }
 
     public void search(String query) {
-        if (allFiles != null) {
+        if (fileList != null) {
             String regexQuery = convertQueryToRegex(query);
             if (!containLargeFile) {
-                for (int i = 0; i < allFiles.size(); i++) {
-                    if (searchByRegex(regexQuery, allFiles.get(i).getPath())) {
-                        satisfiedFileNames.add(allFiles.get(i).getName());
+                for (int i = 0; i < fileList.size(); i++) {
+                    if (searchByRegex(regexQuery, fileList.get(i).getPath())) {
+                        satisfiedFileNames.add(fileList.get(i).getName());
                     }
                 }
             } else {
-                for (int i = 0; i < allFiles.size(); i++) {
-                    if(allFiles.get(i).length()<=2000000000) {
-                        if (searchByRegex(regexQuery, allFiles.get(i).getPath())) {
-                            satisfiedFileNames.add(allFiles.get(i).getName());
+                for (int i = 0; i < fileList.size(); i++) {
+                    if(fileList.get(i).length()<=2000000000) {
+                        if (searchByRegex(regexQuery, fileList.get(i).getPath())) {
+                            satisfiedFileNames.add(fileList.get(i).getName());
                         }
                     }else {
-                        if (searchQueryLineByLine(query, allFiles.get(i))) {
-                            satisfiedFileNames.add(allFiles.get(i).getName());
+                        if (searchQueryLineByLine(query, fileList.get(i))) {
+                            satisfiedFileNames.add(fileList.get(i).getName());
                         }
                     }
                 }
@@ -49,7 +49,7 @@ public class SearchEngine {
         satisfiedFileNames.clear();
     }
 
-    public void printFileNamesOfResult() {
+    private void printFileNamesOfResult() {
         if (satisfiedFileNames.size() == 0)
             System.out.println("there isn't any file in the directory");
         else
@@ -78,7 +78,7 @@ public class SearchEngine {
         return isFileContainsQuery;
     }
 
-    public String convertQueryToRegex(String query) {
+    private String convertQueryToRegex(String query) {
         StringBuilder regexQuery = new StringBuilder();
         String[] operandBetweenORList;
         if (query.contains(Operators.OR.name())) {
@@ -93,7 +93,7 @@ public class SearchEngine {
         } else {
             regexQuery = convertAndExpressionToRegex(query);
         }
-        System.out.println(regexQuery);
+
         return regexQuery.toString().toLowerCase();
     }
 
@@ -108,7 +108,7 @@ public class SearchEngine {
     }
 
     //This method is use for huge files (more than 2 Gb). It reads files line by line
-    public boolean searchQueryLineByLine(String query, File file) {
+    private boolean searchQueryLineByLine(String query, File file) {
         String regexQuery;
         Pattern pattern = null;
         Matcher matcher;
@@ -153,14 +153,14 @@ public class SearchEngine {
                 isFileContainsQuery = andPhrase.evaluate();
 
             } else if (query.contains(Operators.OR.name())) {
-                while_label:
+
                 while (scanner.hasNextLine()) {
                     //process each line
                     line = scanner.nextLine().toLowerCase();
                     matcher = pattern.matcher(line);
                     if (matcher.find()) {
                         isFileContainsQuery = true;
-                        break while_label;
+                        break;
                     }
                 }
             } else {
