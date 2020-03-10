@@ -16,7 +16,7 @@ public class Main {
         }
 
         QueryGenerator queryGenerator = new QueryGenerator();
-        SearchEngine searchEngine = new SearchEngine(textFiles, FileUtil.isAnyLargeFileInDirectory(folderPath), queryGenerator);
+        SearchEngine searchEngine = new SearchEngine(textFiles, queryGenerator);
 
         Scanner scanner = new Scanner(System.in);
         System.out.println("Enter your query, please:");
