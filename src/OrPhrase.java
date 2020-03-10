@@ -33,7 +33,7 @@ public class OrPhrase {
                 return result;
             }
             for (int i = 1; i < andPhraseList.size(); i++) {
-                if (andPhraseList.get(i).getPhraseValue() == true) {
+                if (andPhraseList.get(i).getPhraseValue()) {
                     result = true;
                     break;
                 }
@@ -44,9 +44,6 @@ public class OrPhrase {
         return result;
     }
 
-    public boolean isPhraseValue() {
-        return phraseValue;
-    }
 }
 
 

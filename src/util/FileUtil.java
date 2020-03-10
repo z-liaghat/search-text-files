@@ -12,6 +12,8 @@ public class FileUtil {
             folder = new File(path);
             if(folder.isDirectory()) {
                 File[] listOfFiles = folder.listFiles();
+                if(listOfFiles == null)
+                    return files;
                 for (File file : listOfFiles) {
                     if (file.isFile() && file.getName().endsWith(".txt")) {
                         files.add(file);
@@ -23,7 +25,7 @@ public class FileUtil {
         }
 
         if (files.size()==0) {
-            System.out.println("There is no file");
+            System.out.println("There is no txt file");
         }
         return files;
     }

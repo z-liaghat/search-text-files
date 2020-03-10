@@ -1,3 +1,5 @@
+import util.ShowResult;
+
 import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -12,15 +14,18 @@ public class SearchEngine {
 
     private boolean containLargeFile;
 
-    public SearchEngine(List<File> files, boolean isContainLargeFile) {
+    private QueryGenerator queryGenerator;
+
+    public SearchEngine(List<File> files, boolean isContainLargeFile, QueryGenerator queryGenerator) {
         satisfiedFileNames = new ArrayList<>();
         fileList = files;
         containLargeFile = isContainLargeFile;
+        this.queryGenerator = queryGenerator;
     }
 
     public void search(String query) {
         if (fileList != null) {
-            String regexQuery = convertQueryToRegex(query);
+            String regexQuery = queryGenerator.convertQueryToRegex(query);
             if (!containLargeFile) {
                 for (int i = 0; i < fileList.size(); i++) {
                     if (searchByRegex(regexQuery, fileList.get(i).getPath())) {
@@ -29,11 +34,11 @@ public class SearchEngine {
                 }
             } else {
                 for (int i = 0; i < fileList.size(); i++) {
-                    if(fileList.get(i).length()<=2000000000) {
+                    if (fileList.get(i).length() <= 2000000000) {
                         if (searchByRegex(regexQuery, fileList.get(i).getPath())) {
                             satisfiedFileNames.add(fileList.get(i).getName());
                         }
-                    }else {
+                    } else {
                         if (searchQueryLineByLine(query, fileList.get(i))) {
                             satisfiedFileNames.add(fileList.get(i).getName());
                         }
@@ -41,19 +46,13 @@ public class SearchEngine {
                 }
             }
         }
-        printFileNamesOfResult();
+        //Print file names of result
+        ShowResult.ShowListOfFileName(satisfiedFileNames);
         resetSatisfiedFileNameList();
     }
 
     private void resetSatisfiedFileNameList() {
         satisfiedFileNames.clear();
-    }
-
-    private void printFileNamesOfResult() {
-        if (satisfiedFileNames.size() == 0)
-            System.out.println("there isn't any file in the directory");
-        else
-            System.out.println(Arrays.toString(satisfiedFileNames.toArray()));
     }
 
     public boolean searchByRegex(String regexQuery, String filePath) {
@@ -65,10 +64,11 @@ public class SearchEngine {
 
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath));
-            while ((line = bufferedReader.readLine()) != null) {
-                fileContent.append(line.toLowerCase()); // Append each line to the "file" string
-            }
+            // This loop append each line to the "fileContent" string
             //Inorder to be case sensitive,  all text is converted to lowercase
+            while ((line = bufferedReader.readLine()) != null) {
+                fileContent.append(line.toLowerCase());
+            }
             Matcher matcher = pattern.matcher(fileContent);
             isFileContainsQuery = matcher.matches();
         } catch (IOException e) {
@@ -76,35 +76,6 @@ public class SearchEngine {
         }
 
         return isFileContainsQuery;
-    }
-
-    private String convertQueryToRegex(String query) {
-        StringBuilder regexQuery = new StringBuilder();
-        String[] operandBetweenORList;
-        if (query.contains(Operators.OR.name())) {
-            operandBetweenORList = query.split(Operators.OR.name());
-            for (int i = 0; i < operandBetweenORList.length; i++) {
-                StringBuilder andExpression = convertAndExpressionToRegex(operandBetweenORList[i]);
-                regexQuery.append(andExpression);
-                regexQuery.append("|");
-                if (i == operandBetweenORList.length - 1)
-                    regexQuery.deleteCharAt(regexQuery.length() - 1);
-            }
-        } else {
-            regexQuery = convertAndExpressionToRegex(query);
-        }
-
-        return regexQuery.toString().toLowerCase();
-    }
-
-    private StringBuilder convertAndExpressionToRegex(String andExpression) {
-        String[] operand = andExpression.split(Operators.AND.name());
-        StringBuilder regex = new StringBuilder();
-        for (int j = 0; j < operand.length; j++) {
-            regex.append("(?=.*" + operand[j].toLowerCase().trim() + ")");
-        }
-        regex.append(".*");
-        return regex;
     }
 
     //This method is use for huge files (more than 2 Gb). It reads files line by line
@@ -115,8 +86,6 @@ public class SearchEngine {
         boolean isFileContainsQuery = false;
         AndPhrase andPhrase = null;
         OrPhrase orPhrase = null;
-//        Path path = Paths.get(fileName);
-        Scanner scanner = null;
 
         //preparing query to check the file
         if (query.contains(Operators.AND.name()) && query.contains(Operators.OR.name())) {
@@ -129,9 +98,9 @@ public class SearchEngine {
             regexQuery = regexQuery.toLowerCase();
             pattern = Pattern.compile(regexQuery);
         }
-
+        Scanner scanner = null;
         try {
-            scanner = new Scanner(file);
+             scanner = new Scanner(file);
             String line;
             //reads each line of the input file and check if the query is satisfied or not
             if (query.contains(Operators.AND.name()) && query.contains(Operators.OR.name())) {
@@ -180,11 +149,6 @@ public class SearchEngine {
         }
 
         return isFileContainsQuery;
-    }
-
-
-    public boolean isContainLargeFile() {
-        return containLargeFile;
     }
 
     public void setContainLargeFile(boolean containLargeFile) {
